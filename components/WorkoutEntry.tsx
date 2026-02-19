@@ -11,6 +11,14 @@ const INTENSITY_OPTIONS = [
   { label: 'Maximum',    value: 10 },
 ] as const;
 
+function todayString(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 interface Props {
   onSaved: () => void;
   prefillDuration?: number | null;
@@ -19,6 +27,7 @@ interface Props {
 export default function WorkoutEntry({ onSaved, prefillDuration }: Props) {
   const [duration,  setDuration]  = useState<string>(prefillDuration ? String(prefillDuration) : '');
   const [intensity, setIntensity] = useState<number>(6);
+  const [date,      setDate]      = useState<string>(todayString());
   const [saving,    setSaving]    = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -26,10 +35,14 @@ export default function WorkoutEntry({ onSaved, prefillDuration }: Props) {
     const d = parseFloat(duration);
     if (!d || d <= 0) return;
 
+    // Convert selected date to timestamp (local midnight)
+    const [y, mo, day] = date.split('-').map(Number);
+    const timestamp    = new Date(y, mo - 1, day).getTime();
+
     setSaving(true);
     await db.workouts.add({
       id:        crypto.randomUUID(),
-      date:      Date.now(),
+      date:      timestamp,
       duration:  d,
       intensity,
       load:      d * intensity,
@@ -37,12 +50,24 @@ export default function WorkoutEntry({ onSaved, prefillDuration }: Props) {
 
     setDuration('');
     setIntensity(6);
+    setDate(todayString());
     setSaving(false);
     onSaved();
   }
 
   return (
     <form onSubmit={handleSubmit} className="sc-form-body">
+
+      <div className="sc-field">
+        <label className="sc-field-label">Date</label>
+        <input
+          type="date"
+          required
+          value={date}
+          max={todayString()}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      </div>
 
       <div className="sc-field">
         <label className="sc-field-label">Duration (min)</label>
@@ -80,3 +105,4 @@ export default function WorkoutEntry({ onSaved, prefillDuration }: Props) {
     </form>
   );
 }
+
