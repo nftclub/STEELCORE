@@ -15,6 +15,7 @@ async function fetchWorkouts(): Promise<Workout[]> {
 export default function Page() {
   const [workouts, setWorkouts]           = useState<Workout[]>([]);
   const [timerDuration, setTimerDuration] = useState<number | null>(null);
+  const [showInfo, setShowInfo]           = useState(false);
   const swRegistered                      = useRef(false);
 
   useEffect(() => {
@@ -81,13 +82,6 @@ export default function Page() {
         }
 
         /* ── Header ── */
-        .sc-header {
-          padding: 20px 24px;
-          border-bottom: 1px solid var(--border);
-          display: flex;
-          align-items: baseline;
-          gap: 14px;
-        }
         .sc-wordmark {
           font-family: var(--font-label);
           font-size: 17px;
@@ -442,7 +436,82 @@ export default function Page() {
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Modal ── */
+        /* ── Info button ── */
+        .sc-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px 20px 16px;
+          border-bottom: 1px solid var(--border);
+        }
+        .sc-header-left { display: flex; align-items: center; gap: 14px; }
+        .sc-info-btn {
+          display: flex; align-items: center; justify-content: center;
+          width: 28px; height: 28px;
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: 50%;
+          color: var(--text-3);
+          font-family: var(--font-label);
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 150ms var(--ease);
+          flex-shrink: 0;
+        }
+        .sc-info-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Info modal ── */
+        .sc-info-modal {
+          background: var(--surface);
+          border: 1px solid var(--border-hi);
+          border-radius: var(--radius);
+          padding: 28px 24px;
+          width: min(380px, calc(100vw - 32px));
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          animation: modalUp 200ms var(--ease);
+          max-height: 80vh;
+          overflow-y: auto;
+        }
+        .sc-info-section { display: flex; flex-direction: column; gap: 8px; }
+        .sc-info-heading {
+          font-family: var(--font-label);
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: var(--accent);
+        }
+        .sc-info-text {
+          font-family: var(--font-label);
+          font-size: 13px;
+          font-weight: 400;
+          color: var(--text-2);
+          line-height: 1.6;
+          letter-spacing: 0.02em;
+        }
+        .sc-info-table { width: 100%; border-collapse: collapse; }
+        .sc-info-table td {
+          font-family: var(--font-label);
+          font-size: 12px;
+          color: var(--text-2);
+          padding: 4px 0;
+          letter-spacing: 0.04em;
+        }
+        .sc-info-table td:last-child { text-align: right; color: var(--text-3); }
+        .sc-info-divider {
+          height: 1px;
+          background: var(--border);
+        }
+        .sc-info-note {
+          font-family: var(--font-label);
+          font-size: 11px;
+          color: var(--text-3);
+          line-height: 1.5;
+          letter-spacing: 0.03em;
+        }
         .sc-overlay {
           position: fixed;
           inset: 0;
@@ -491,9 +560,71 @@ export default function Page() {
 
       <div className="sc-shell">
         <header className="sc-header">
-          <span className="sc-wordmark">Steel<em>Core</em></span>
-          <span className="sc-tagline">Load Tracker</span>
+          <div className="sc-header-left">
+            <span className="sc-wordmark">Steel<em>Core</em></span>
+            <span className="sc-tagline">Load Tracker</span>
+          </div>
+          <button className="sc-info-btn" onClick={() => setShowInfo(true)} aria-label="About ACWR">?</button>
         </header>
+
+        {showInfo && (
+          <div className="sc-overlay" onClick={() => setShowInfo(false)}>
+            <div className="sc-info-modal" onClick={(e) => e.stopPropagation()}>
+
+              <div className="sc-info-section">
+                <span className="sc-info-heading">What is ACWR?</span>
+                <p className="sc-info-text">A ratio that compares your recent training load to your longer-term average to help you understand workload trends.</p>
+              </div>
+
+              <div className="sc-info-divider" />
+
+              <div className="sc-info-section">
+                <span className="sc-info-heading">How it&apos;s calculated</span>
+                <p className="sc-info-text">
+                  Load = Duration (min) × Intensity<br />
+                  Acute = Total load over the last 7 days<br />
+                  Chronic = Rolling 4-week average (28 days ÷ 4)<br />
+                  Ratio = Acute ÷ Chronic
+                </p>
+              </div>
+
+              <div className="sc-info-divider" />
+
+              <div className="sc-info-section">
+                <span className="sc-info-heading">Intensity Scale</span>
+                <table className="sc-info-table">
+                  <tbody>
+                    <tr><td>Very Light</td><td>×2</td></tr>
+                    <tr><td>Light</td><td>×4</td></tr>
+                    <tr><td>Moderate</td><td>×6</td></tr>
+                    <tr><td>Hard</td><td>×8</td></tr>
+                    <tr><td>Maximum</td><td>×10</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="sc-info-divider" />
+
+              <div className="sc-info-section">
+                <span className="sc-info-heading">Ratio Reference</span>
+                <table className="sc-info-table">
+                  <tbody>
+                    <tr><td>Below 0.8</td><td>Reduced Load</td></tr>
+                    <tr><td>0.8 – 1.3</td><td>Stable Load</td></tr>
+                    <tr><td>1.3 – 1.5</td><td>Elevated Load</td></tr>
+                    <tr><td>Above 1.5</td><td>High Load Increase</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="sc-info-divider" />
+
+              <p className="sc-info-note">Intensity is self-reported based on perceived effort. Based on Tim Gabbett&apos;s sports science research. Not medical advice.</p>
+
+              <button className="sc-btn sc-btn-ghost" onClick={() => setShowInfo(false)}>Close</button>
+            </div>
+          </div>
+        )}
 
         <div className="sc-body">
           <div className="sc-card">
