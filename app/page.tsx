@@ -96,7 +96,11 @@ export default function Page() {
           text-transform: uppercase;
           color: var(--text);
         }
-        .sc-wordmark em { color: var(--accent); font-style: normal; }
+        .sc-wordmark em {
+          color: var(--accent);
+          font-style: normal;
+          text-shadow: 0 0 20px rgba(224,90,43,0.4);
+        }
         .sc-tagline {
           font-family: var(--font-label);
           font-size: 10px;
@@ -122,6 +126,11 @@ export default function Page() {
           border: 1px solid var(--border);
           border-radius: var(--radius);
           overflow: hidden;
+          transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease);
+        }
+        .sc-card:hover {
+          border-color: #2e2e2e;
+          box-shadow: 0 0 0 1px rgba(224,90,43,0.06), 0 4px 24px rgba(0,0,0,0.4);
         }
         .sc-card-header {
           padding: 12px 20px;
@@ -158,7 +167,9 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 5px;
+          transition: background 200ms var(--ease);
         }
+        .sc-metric:hover { background: rgba(255,255,255,0.015); }
         .sc-metric:nth-child(2n)   { border-right: none; }
         .sc-metric:nth-child(3),
         .sc-metric:nth-child(4)    { border-bottom: none; }
@@ -252,6 +263,72 @@ export default function Page() {
           gap: 8px;
         }
 
+        /* ── Preset buttons ── */
+        .sc-preset-row {
+          display: flex;
+          gap: 6px;
+          margin-bottom: 16px;
+        }
+        .sc-preset-btn {
+          font-family: var(--font-label);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          padding: 6px 14px;
+          border-radius: var(--radius);
+          border: 1px solid var(--border-hi);
+          background: transparent;
+          color: var(--text-3);
+          cursor: pointer;
+          transition: all 150ms var(--ease);
+        }
+        .sc-preset-btn:hover:not(:disabled) {
+          border-color: var(--accent);
+          color: var(--text-2);
+        }
+        .sc-preset-btn.active {
+          border-color: var(--accent);
+          color: var(--accent);
+          background: var(--accent-soft);
+        }
+        .sc-preset-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ── Custom row ── */
+        .sc-custom-row {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+        .sc-custom-field {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          flex: 1;
+        }
+        .sc-custom-field span {
+          font-family: var(--font-label);
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--text-3);
+        }
+        .sc-custom-field input {
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 8px 10px;
+          color: var(--text);
+          font-family: var(--font-num);
+          font-size: 14px;
+          text-align: center;
+          outline: none;
+          width: 100%;
+          transition: border-color 160ms var(--ease);
+        }
+        .sc-custom-field input:focus { border-color: var(--accent); }
+
         /* ── Buttons ── */
         .sc-btn {
           font-family: var(--font-label);
@@ -262,15 +339,26 @@ export default function Page() {
           border: none;
           border-radius: var(--radius);
           padding: 11px 28px;
-          transition: opacity 140ms var(--ease);
+          transition: opacity 140ms var(--ease), transform 120ms var(--ease), box-shadow 140ms var(--ease);
         }
-        .sc-btn:hover  { opacity: 0.82; }
-        .sc-btn:active { opacity: 0.65; }
-        .sc-btn-primary { background: var(--accent); color: #fff; }
-        .sc-btn-ghost   {
+        .sc-btn:hover  { opacity: 0.88; transform: translateY(-1px); }
+        .sc-btn:active { opacity: 0.7;  transform: translateY(0px) scale(0.98); }
+        .sc-btn-primary {
+          background: var(--accent);
+          color: #fff;
+          box-shadow: 0 2px 12px rgba(224,90,43,0.25);
+        }
+        .sc-btn-primary:hover {
+          box-shadow: 0 4px 20px rgba(224,90,43,0.4);
+        }
+        .sc-btn-ghost {
           background: transparent;
           color: var(--text-2);
           border: 1px solid var(--border-hi);
+        }
+        .sc-btn-ghost:hover {
+          border-color: #3a3a3a;
+          color: var(--text);
         }
 
         /* ── Form ── */
@@ -305,7 +393,10 @@ export default function Page() {
           appearance: none;
         }
         .sc-field input:focus,
-        .sc-field select:focus { border-color: var(--accent); }
+        .sc-field select:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(224,90,43,0.08);
+        }
         .sc-field input::placeholder { color: var(--text-3); }
         .sc-submit {
           width: 100%;
@@ -317,6 +408,39 @@ export default function Page() {
 
         /* ── Chart ── */
         .sc-chart-body { padding: 16px 8px 12px 0; }
+        .sc-chart-toolbar {
+          display: flex;
+          justify-content: flex-end;
+          padding: 0 16px 4px;
+        }
+        .sc-chart-capture { width: 100%; }
+        .sc-share-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          color: var(--text-3);
+          cursor: pointer;
+          transition: all 150ms var(--ease);
+        }
+        .sc-share-btn:hover {
+          border-color: var(--accent);
+          color: var(--accent);
+        }
+        .sc-share-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .sc-share-spinner {
+          width: 10px; height: 10px;
+          border: 1.5px solid var(--text-3);
+          border-top-color: var(--accent);
+          border-radius: 50%;
+          animation: spin 600ms linear infinite;
+          display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ── Modal ── */
         .sc-overlay {
