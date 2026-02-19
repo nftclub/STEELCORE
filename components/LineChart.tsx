@@ -11,36 +11,10 @@ import {
   CartesianGrid,
 } from 'recharts';
 import type { Workout } from '../lib/db';
+import { buildWeeklyData } from '../lib/calculations';
 
 interface Props {
   workouts: Workout[];
-}
-
-interface WeekBucket {
-  week: string;
-  load: number;
-}
-
-function buildWeeklyData(workouts: Workout[]): WeekBucket[] {
-  const now     = Date.now();
-  const MS_WEEK = 7 * 24 * 60 * 60 * 1000;
-  const MS_28   = 28 * 24 * 60 * 60 * 1000;
-
-  const buckets: WeekBucket[] = [
-    { week: 'Wk 4', load: 0 },
-    { week: 'Wk 3', load: 0 },
-    { week: 'Wk 2', load: 0 },
-    { week: 'Wk 1', load: 0 },
-  ];
-
-  workouts.forEach((w) => {
-    const age = now - w.date;
-    if (age < 0 || age >= MS_28) return;
-    const idx = Math.floor(age / MS_WEEK);
-    buckets[3 - idx].load += w.load;
-  });
-
-  return buckets;
 }
 
 export default function LoadLineChart({ workouts }: Props) {
