@@ -10,7 +10,6 @@ import {
   CartesianGrid,
 } from 'recharts';
 import type { Workout } from '../lib/db';
-import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface Props {
   workouts: Workout[];
@@ -36,39 +35,11 @@ function buildWeeklyData(workouts: Workout[]): WeekBucket[] {
   workouts.forEach((w) => {
     const age = now - w.date;
     if (age < 0 || age >= MS_28) return;
-    const idx = Math.floor(age / MS_WEEK); // 0 = most recent
+    const idx = Math.floor(age / MS_WEEK);
     buckets[3 - idx].load += w.load;
   });
 
   return buckets;
-}
-
-// Custom tooltip
-function CustomTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ value?: ValueType; name?: NameType }>;
-  label?: string;
-}) {
-  if (!active || !payload || !payload.length) return null;
-  return (
-    <div style={{
-      background: '#1a1a1a',
-      border: '1px solid #2c2c2c',
-      borderRadius: 3,
-      padding: '8px 12px',
-    }}>
-      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#555', marginBottom: 3 }}>
-        {label}
-      </div>
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, fontWeight: 700, color: '#e2e2e2', fontVariantNumeric: 'tabular-nums' }}>
-        {typeof payload[0].value === 'number' ? payload[0].value.toFixed(0) : '0'}
-      </div>
-    </div>
-  );
 }
 
 export default function LoadLineChart({ workouts }: Props) {
@@ -78,11 +49,7 @@ export default function LoadLineChart({ workouts }: Props) {
     <div className="sc-chart-body">
       <ResponsiveContainer width="100%" height={180}>
         <ReLineChart data={data} margin={{ top: 8, right: 20, left: 0, bottom: 4 }}>
-          <CartesianGrid
-            stroke="#1e1e1e"
-            vertical={false}
-            strokeDasharray="0"
-          />
+          <CartesianGrid stroke="#1e1e1e" vertical={false} strokeDasharray="0" />
           <XAxis
             dataKey="week"
             tick={{ fill: '#3a3a3a', fontSize: 10, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.12em' }}
@@ -97,7 +64,13 @@ export default function LoadLineChart({ workouts }: Props) {
             dx={-4}
             width={36}
           />
-          <Tooltip content={(props) => <CustomTooltip {...props} />} cursor={{ stroke: '#2c2c2c', strokeWidth: 1 }} />
+          <Tooltip
+            contentStyle={{ background: '#1a1a1a', border: '1px solid #2c2c2c', borderRadius: 3 }}
+            labelStyle={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#555' }}
+            itemStyle={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, fontWeight: 700, color: '#e2e2e2' }}
+            cursor={{ stroke: '#2c2c2c', strokeWidth: 1 }}
+            formatter={(value: number) => [value.toFixed(0), 'Load']}
+          />
           <Line
             type="monotone"
             dataKey="load"
@@ -112,3 +85,4 @@ export default function LoadLineChart({ workouts }: Props) {
     </div>
   );
 }
+
