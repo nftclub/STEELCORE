@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { db } from '../lib/db';
 import type { Workout } from '../lib/db';
-import WorkoutEntry   from '../components/WorkoutEntry';
-import LoadMetrics    from '../components/LoadMetrics';
-import LoadLineChart  from '../components/LineChart';
-import WorkoutHistory from '../components/WorkoutHistory';
+import WorkoutEntry      from '../components/WorkoutEntry';
+import LoadMetrics       from '../components/LoadMetrics';
+import LoadLineChart     from '../components/LineChart';
+import WorkoutHistory    from '../components/WorkoutHistory';
+import WeeklyLoadTable   from '../components/WeeklyLoadTable';
 
 async function fetchWorkouts(): Promise<Workout[]> {
   return db.workouts.orderBy('date').reverse().toArray();
@@ -16,6 +17,7 @@ export default function Page() {
   const [workouts,  setWorkouts]  = useState<Workout[]>([]);
   const [showInfo,  setShowInfo]  = useState(false);
   const swRegistered              = useRef(false);
+  const logRef                    = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchWorkouts().then(setWorkouts);
@@ -393,7 +395,142 @@ export default function Page() {
         }
         .sc-submit:disabled { opacity: 0.35; cursor: not-allowed; }
 
-        /* ── History ── */
+        /* ── Weekly Load Table ── */
+        .sc-weekly-body {
+          padding: 12px 20px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .sc-weekly-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .sc-weekly-day {
+          font-family: var(--font-label);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--text-3);
+          width: 28px;
+          flex-shrink: 0;
+        }
+        .sc-weekly-row.today .sc-weekly-day { color: var(--accent); }
+        .sc-weekly-bar-wrap {
+          flex: 1;
+          height: 6px;
+          background: var(--border);
+          border-radius: 3px;
+          overflow: hidden;
+        }
+        .sc-weekly-bar {
+          height: 100%;
+          background: var(--border-hi);
+          border-radius: 3px;
+          transition: width 500ms cubic-bezier(0.4,0,0.2,1);
+          min-width: 0;
+        }
+        .sc-weekly-row.today .sc-weekly-bar { background: var(--accent); }
+        .sc-weekly-load {
+          font-family: var(--font-num);
+          font-size: 11px;
+          color: var(--text-3);
+          width: 32px;
+          text-align: right;
+          font-variant-numeric: tabular-nums;
+          flex-shrink: 0;
+        }
+        .sc-weekly-row.today .sc-weekly-load { color: var(--text-2); }
+
+        /* ── Zone Bar ── */
+        .sc-zone-wrap {
+          position: relative;
+          padding: 12px 20px 18px;
+          border-top: 1px solid var(--border);
+        }
+        .sc-zone-track {
+          display: flex;
+          height: 6px;
+          border-radius: 3px;
+          overflow: hidden;
+          gap: 1px;
+        }
+        .sc-zone-seg { height: 100%; }
+        .sc-zone-marker {
+          position: absolute;
+          top: 6px;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: var(--surface);
+          border: 2px solid #e05a2b;
+          transform: translateX(-50%);
+          transition: left 400ms cubic-bezier(0.4,0,0.2,1), border-color 300ms ease;
+          box-shadow: 0 0 8px rgba(224,90,43,0.4);
+        }
+        .sc-zone-labels {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 8px;
+          font-family: var(--font-num);
+          font-size: 9px;
+          color: var(--text-3);
+          letter-spacing: 0.04em;
+        }
+
+        /* ── Empty State ── */
+        .sc-empty {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 56px 24px 48px;
+          text-align: center;
+          gap: 12px;
+        }
+        .sc-empty-icon {
+          font-size: 32px;
+          margin-bottom: 4px;
+          opacity: 0.4;
+        }
+        .sc-empty-title {
+          font-family: var(--font-label);
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--text-2);
+        }
+        .sc-empty-sub {
+          font-family: var(--font-label);
+          font-size: 12px;
+          color: var(--text-3);
+          letter-spacing: 0.06em;
+          line-height: 1.6;
+          max-width: 240px;
+        }
+        .sc-empty-cta {
+          margin-top: 8px;
+          font-family: var(--font-label);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          background: var(--accent);
+          color: #fff;
+          border: none;
+          border-radius: var(--radius);
+          padding: 12px 28px;
+          cursor: pointer;
+          box-shadow: 0 2px 12px rgba(224,90,43,0.25);
+          transition: all 150ms var(--ease);
+        }
+        .sc-empty-cta:hover {
+          box-shadow: 0 4px 20px rgba(224,90,43,0.4);
+          transform: translateY(-1px);
+        }
         .sc-history-list { padding: 8px 0 4px; }
         .sc-history-empty {
           padding: 20px 20px;
@@ -751,37 +888,70 @@ export default function Page() {
         )}
 
         <div className="sc-body">
-          <div className="sc-card">
-            <div className="sc-card-header">
-              <div className="sc-card-pip" />
-              <span className="sc-card-title">Metrics</span>
-            </div>
-            <LoadMetrics workouts={workouts} />
-          </div>
+          {workouts.length === 0 ? (
+            <>
+              <div className="sc-card">
+                <div className="sc-empty">
+                  <div className="sc-empty-icon">⬡</div>
+                  <span className="sc-empty-title">No Workouts Yet</span>
+                  <p className="sc-empty-sub">Log your first workout to start tracking your workload.</p>
+                  <button className="sc-empty-cta" onClick={() => logRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+                    Log Workout
+                  </button>
+                </div>
+              </div>
 
-          <div className="sc-card">
-            <div className="sc-card-header">
-              <div className="sc-card-pip" />
-              <span className="sc-card-title">4-Week Load</span>
-            </div>
-            <LoadLineChart workouts={workouts} />
-          </div>
+              <div className="sc-card" ref={logRef}>
+                <div className="sc-card-header">
+                  <div className="sc-card-pip" />
+                  <span className="sc-card-title">Log Workout</span>
+                </div>
+                <WorkoutEntry onSaved={handleSaved} />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="sc-card">
+                <div className="sc-card-header">
+                  <div className="sc-card-pip" />
+                  <span className="sc-card-title">Metrics</span>
+                </div>
+                <LoadMetrics workouts={workouts} />
+              </div>
 
-          <div className="sc-card">
-            <div className="sc-card-header">
-              <div className="sc-card-pip" />
-              <span className="sc-card-title">Log Workout</span>
-            </div>
-            <WorkoutEntry onSaved={handleSaved} />
-          </div>
+              <div className="sc-card">
+                <div className="sc-card-header">
+                  <div className="sc-card-pip" />
+                  <span className="sc-card-title">4-Week Load</span>
+                </div>
+                <LoadLineChart workouts={workouts} />
+              </div>
 
-          <div className="sc-card">
-            <div className="sc-card-header">
-              <div className="sc-card-pip" />
-              <span className="sc-card-title">History</span>
-            </div>
-            <WorkoutHistory workouts={workouts} onChanged={handleSaved} />
-          </div>
+              <div className="sc-card">
+                <div className="sc-card-header">
+                  <div className="sc-card-pip" />
+                  <span className="sc-card-title">This Week</span>
+                </div>
+                <WeeklyLoadTable workouts={workouts} />
+              </div>
+
+              <div className="sc-card">
+                <div className="sc-card-header">
+                  <div className="sc-card-pip" />
+                  <span className="sc-card-title">Log Workout</span>
+                </div>
+                <WorkoutEntry onSaved={handleSaved} />
+              </div>
+
+              <div className="sc-card">
+                <div className="sc-card-header">
+                  <div className="sc-card-pip" />
+                  <span className="sc-card-title">History</span>
+                </div>
+                <WorkoutHistory workouts={workouts} onChanged={handleSaved} />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

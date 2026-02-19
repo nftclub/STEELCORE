@@ -93,3 +93,33 @@ export function buildWeeklyData(workouts: Workout[]): WeekBucket[] {
 
   return buckets;
 }
+
+// ── Daily breakdown for last 7 days ──────────────────────────────────────────
+export interface DayLoad {
+  dayLabel: string; // Mon, Tue, etc.
+  dateKey:  string; // YYYY-MM-DD
+  load:     number;
+  isToday:  boolean;
+}
+
+export function getDailyBreakdown(workouts: Workout[]): DayLoad[] {
+  const aggregated = aggregateByDate(workouts);
+  const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today      = new Date();
+  const todayKey   = toDateKey(today.getTime());
+  const result: DayLoad[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const d    = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key  = toDateKey(d.getTime());
+    result.push({
+      dayLabel: DAY_NAMES[d.getDay()],
+      dateKey:  key,
+      load:     aggregated.get(key) ?? 0,
+      isToday:  key === todayKey,
+    });
+  }
+
+  return result;
+}
