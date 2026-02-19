@@ -3,20 +3,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { db } from '../lib/db';
 import type { Workout } from '../lib/db';
-import WorkoutEntry  from '../components/WorkoutEntry';
-import FireDayTimer  from '../components/FireDayTimer';
-import LoadMetrics   from '../components/LoadMetrics';
-import LoadLineChart from '../components/LineChart';
+import WorkoutEntry   from '../components/WorkoutEntry';
+import LoadMetrics    from '../components/LoadMetrics';
+import LoadLineChart  from '../components/LineChart';
+import WorkoutHistory from '../components/WorkoutHistory';
 
 async function fetchWorkouts(): Promise<Workout[]> {
   return db.workouts.orderBy('date').reverse().toArray();
 }
 
 export default function Page() {
-  const [workouts, setWorkouts]           = useState<Workout[]>([]);
-  const [timerDuration, setTimerDuration] = useState<number | null>(null);
-  const [showInfo, setShowInfo]           = useState(false);
-  const swRegistered                      = useRef(false);
+  const [workouts,  setWorkouts]  = useState<Workout[]>([]);
+  const [showInfo,  setShowInfo]  = useState(false);
+  const swRegistered              = useRef(false);
 
   useEffect(() => {
     fetchWorkouts().then(setWorkouts);
@@ -27,13 +26,7 @@ export default function Page() {
     }
   }, []);
 
-  function handleTimerLog(totalSeconds: number) {
-    const mins = Math.round(totalSeconds / 60);
-    setTimerDuration(mins > 0 ? mins : 1);
-  }
-
   function handleSaved() {
-    setTimerDuration(null);
     fetchWorkouts().then(setWorkouts);
   }
 
@@ -400,7 +393,138 @@ export default function Page() {
         }
         .sc-submit:disabled { opacity: 0.35; cursor: not-allowed; }
 
-        /* ── Chart ── */
+        /* ── History ── */
+        .sc-history-list { padding: 8px 0 4px; }
+        .sc-history-empty {
+          padding: 20px 20px;
+          font-family: var(--font-label);
+          font-size: 12px;
+          color: var(--text-3);
+          letter-spacing: 0.08em;
+        }
+        .sc-history-row-wrap {
+          position: relative;
+          overflow: hidden;
+          border-bottom: 1px solid var(--border);
+        }
+        .sc-history-row-wrap:last-child { border-bottom: none; }
+        .sc-history-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 20px;
+          transition: transform 240ms var(--ease);
+          background: var(--surface);
+        }
+        .sc-history-row-wrap.swiped .sc-history-row {
+          transform: translateX(-80px);
+        }
+        .sc-history-meta { display: flex; flex-direction: column; gap: 3px; }
+        .sc-history-date {
+          font-family: var(--font-label);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          color: var(--text);
+        }
+        .sc-history-detail {
+          font-family: var(--font-label);
+          font-size: 11px;
+          color: var(--text-3);
+          letter-spacing: 0.06em;
+        }
+        .sc-history-right {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .sc-history-load {
+          font-family: var(--font-num);
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text-2);
+          font-variant-numeric: tabular-nums;
+        }
+        .sc-history-actions { display: flex; gap: 4px; }
+        .sc-hist-btn {
+          font-family: var(--font-label);
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          padding: 5px 10px;
+          border-radius: var(--radius);
+          border: 1px solid var(--border-hi);
+          background: transparent;
+          color: var(--text-3);
+          cursor: pointer;
+          transition: all 140ms var(--ease);
+        }
+        .sc-hist-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .sc-hist-del:hover { border-color: #c0392b; color: #c0392b; }
+        .sc-swipe-delete {
+          position: absolute;
+          right: 0; top: 0; bottom: 0;
+          width: 80px;
+          background: #c0392b;
+          color: #fff;
+          border: none;
+          font-family: var(--font-label);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transform: translateX(80px);
+          transition: transform 240ms var(--ease);
+        }
+        .sc-history-row-wrap.swiped .sc-swipe-delete {
+          transform: translateX(0);
+        }
+
+        /* ── History Edit ── */
+        .sc-history-edit {
+          padding: 16px 20px;
+          background: var(--surface-hi);
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .sc-history-edit-fields { display: flex; flex-direction: column; gap: 10px; }
+        .sc-he-field { display: flex; flex-direction: column; gap: 4px; }
+        .sc-he-label {
+          font-family: var(--font-label);
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--text-3);
+        }
+        .sc-he-field input,
+        .sc-he-field select {
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 9px 12px;
+          color: var(--text);
+          font-size: 14px;
+          width: 100%;
+          outline: none;
+          transition: border-color 160ms var(--ease);
+          -webkit-appearance: none;
+          appearance: none;
+        }
+        .sc-he-field input:focus,
+        .sc-he-field select:focus { border-color: var(--accent); }
+        .sc-he-load {
+          font-family: var(--font-num);
+          font-size: 13px;
+          color: var(--accent);
+          font-variant-numeric: tabular-nums;
+        }
+        .sc-he-actions { display: flex; gap: 8px; }
+        .sc-he-btn { flex: 1; text-align: center; padding: 10px; }
         .sc-chart-body { padding: 16px 8px 12px 0; }
         .sc-chart-toolbar {
           display: flex;
@@ -646,17 +770,17 @@ export default function Page() {
           <div className="sc-card">
             <div className="sc-card-header">
               <div className="sc-card-pip" />
-              <span className="sc-card-title">Fire Day Timer</span>
+              <span className="sc-card-title">Log Workout</span>
             </div>
-            <FireDayTimer onLogSession={handleTimerLog} />
+            <WorkoutEntry onSaved={handleSaved} />
           </div>
 
           <div className="sc-card">
             <div className="sc-card-header">
               <div className="sc-card-pip" />
-              <span className="sc-card-title">Log Workout</span>
+              <span className="sc-card-title">History</span>
             </div>
-            <WorkoutEntry onSaved={handleSaved} prefillDuration={timerDuration} />
+            <WorkoutHistory workouts={workouts} onChanged={handleSaved} />
           </div>
         </div>
       </div>
