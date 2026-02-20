@@ -1,0 +1,67 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Init TWA project
+        run: |
+          mkdir twa-build
+          cd twa-build
+          bubblewrap init --manifest https://steelcore-alpha.vercel.app/manifest.json \
+            --chromeosonly false \
+            --directory .
+
+      - name: Create keystore
+        run: |
+          cd twa-build
+          keytool -genkeypair \
+            -dname "cn=steelcore dev, ou=Mobile, o=SteelCore, c=TR" \
+            -alias steelcore \
+            -keypass "${{ secrets.KEY_PASSWORD }}" \
+            -keystore android.keystore \
+            -storepass "${{ secrets.KEY_PASSWORD }}" \
+            -validity 20000 \
+            -keyalg RSA
+
+      - name: Build APK
+        run: |
+          cd twa-build
+          bubblewrap build \
+            --skipPwaValidation \
+            --signingKeyPath android.keystore \
+            --signingKeyAlias steelcore \
+            --signingKeyPassword "${{ secrets.KEY_PASSWORD }}" \
+            --signingStorePassword "${{ secrets.KEY_PASSWORD }}"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: steelcore-apk
+          path: twa-build/app-release-signed.apk
